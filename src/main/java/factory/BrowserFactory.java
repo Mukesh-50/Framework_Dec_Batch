@@ -98,6 +98,7 @@ public class BrowserFactory
 					opt.addArguments("--headless");
 					opt.addArguments("--no-sandbox");
 					opt.addArguments("--disable-dev-shm-usage");
+					opt.addArguments("--window-size=1920,1080");
 					driver = new ChromeDriver(opt);
 				}
 				else
