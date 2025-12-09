@@ -20,9 +20,7 @@ public class BrowserFactory
 	
 	public static WebDriver getDriver()
 	{
-		
 		return driver;
-		
 	}
 	
 
@@ -31,9 +29,11 @@ public class BrowserFactory
 
 		System.out.println("Application will be running on " + browserName + " with url " + applicationURL);
 		
-		String isCloud=ConfigReader.getValue("cloud");
-		
-		String huburl=ConfigReader.getValue("huburl")+":"+ConfigReader.getValue("hubport")+"/wd/hub";
+		String isCloud = ConfigReader.getValue("cloud");
+		String huburl = ConfigReader.getValue("huburl") + ":" + ConfigReader.getValue("hubport") + "/wd/hub";
+
+		// NEW: Flag for GitHub Actions
+		String isGithubAction = ConfigReader.getValue("githuaction");
 		
 		
 		if(isCloud.equalsIgnoreCase("true"))
@@ -44,14 +44,22 @@ public class BrowserFactory
 			if (browserName.toLowerCase().equals("chrome") || browserName.toLowerCase().equals("gc")
 					|| browserName.toLowerCase().equals("google")) 
 			{
+				ChromeOptions opt = new ChromeOptions();
 				
-				ChromeOptions opt=new ChromeOptions();
+				// Use headless in GitHub Actions
+				if(isGithubAction != null && isGithubAction.equalsIgnoreCase("true"))
+				{
+					opt.addArguments("--headless");
+					opt.addArguments("--no-sandbox");
+					opt.addArguments("--disable-dev-shm-usage");
+				}
 				
 				try 
 				{
-					driver = new RemoteWebDriver(new URL(huburl),opt);
+					driver = new RemoteWebDriver(new URL(huburl), opt);
 					
-				} catch (MalformedURLException e) 
+				} 
+				catch (MalformedURLException e) 
 				{
 					System.out.println("Could not connect to Grid");
 				}
@@ -62,11 +70,13 @@ public class BrowserFactory
 			{
 				driver = new FirefoxDriver();
 			
-			} else if (browserName.toLowerCase().equals("edge") || browserName.toLowerCase().equals("msedge")
+			} 
+			else if (browserName.toLowerCase().equals("edge") || browserName.toLowerCase().equals("msedge")
 					|| browserName.toLowerCase().equals("microsoft edge")) 
 			{
 				driver = new EdgeDriver();
-			}  else 
+			}  
+			else 
 			{
 				System.out.println("Sorry - currently our framework does not support " + browserName + " browser");
 			}
@@ -81,41 +91,56 @@ public class BrowserFactory
 			if (browserName.toLowerCase().equals("chrome") || browserName.toLowerCase().equals("gc")
 					|| browserName.toLowerCase().equals("google")) 
 			{
-				driver = new ChromeDriver();
+				// If running in GitHub Actions -> headless
+				if(isGithubAction != null && isGithubAction.equalsIgnoreCase("true"))
+				{
+					ChromeOptions opt = new ChromeOptions();
+					opt.addArguments("--headless");
+					opt.addArguments("--no-sandbox");
+					opt.addArguments("--disable-dev-shm-usage");
+					driver = new ChromeDriver(opt);
+				}
+				else
+				{
+					// Normal local run
+					driver = new ChromeDriver();
+				}
 			} 
 			else if (browserName.toLowerCase().equals("firefox") || browserName.toLowerCase().equals("mozila")
 					|| browserName.toLowerCase().equals("ff")) 
 			{
 				driver = new FirefoxDriver();
 			
-			} else if (browserName.toLowerCase().equals("edge") || browserName.toLowerCase().equals("msedge")
+			} 
+			else if (browserName.toLowerCase().equals("edge") || browserName.toLowerCase().equals("msedge")
 					|| browserName.toLowerCase().equals("microsoft edge")) 
 			{
 				driver = new EdgeDriver();
-			} else if (browserName.toLowerCase().equals("safari") || browserName.toLowerCase().equals("apple safari")) 
+			} 
+			else if (browserName.toLowerCase().equals("safari") || browserName.toLowerCase().equals("apple safari")) 
 			{
 				driver = new SafariDriver();
 				
-			} else 
+			} 
+			else 
 			{
 				System.out.println("Sorry - currently our framework does not support " + browserName + " browser");
 			}
 
 		}
 		
-		
-		
-
-		
 		driver.manage().window().maximize();
 		
-		driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(Long.parseLong(ConfigReader.getValue("pageloadtimeout"))));
+		driver.manage().timeouts().pageLoadTimeout(
+				Duration.ofSeconds(Long.parseLong(ConfigReader.getValue("pageloadtimeout"))));
 
 		driver.get(applicationURL);
 		
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(Long.parseLong(ConfigReader.getValue("implicitwait"))));
+		driver.manage().timeouts().implicitlyWait(
+				Duration.ofSeconds(Long.parseLong(ConfigReader.getValue("implicitwait"))));
 		
-		driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(Long.parseLong(ConfigReader.getValue("scripttimeout"))));
+		driver.manage().timeouts().scriptTimeout(
+				Duration.ofSeconds(Long.parseLong(ConfigReader.getValue("scripttimeout"))));
 		
 		System.out.println("Application is up and running");
 
