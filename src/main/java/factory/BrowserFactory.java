@@ -95,10 +95,12 @@ public class BrowserFactory
 				if(isGithubAction != null && isGithubAction.equalsIgnoreCase("true"))
 				{
 					ChromeOptions opt = new ChromeOptions();
-					opt.addArguments("--headless");
-					opt.addArguments("--no-sandbox");
-					opt.addArguments("--disable-dev-shm-usage");
-					opt.addArguments("--window-size=1920,1080");
+					   	opt.addArguments("--headless=new");
+	                    opt.addArguments("--no-sandbox");
+	                    opt.addArguments("--disable-dev-shm-usage");
+	                    opt.addArguments("--window-size=1920,1080");
+	                    opt.addArguments("--high-dpi-support=1");
+	                    opt.addArguments("--force-device-scale-factor=1");
 					driver = new ChromeDriver(opt);
 				}
 				else
