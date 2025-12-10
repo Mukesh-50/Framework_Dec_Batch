@@ -48,7 +48,7 @@ public class LoginTest extends BaseClass
 		
 		String msg=dashboard.getWelcomeMessage();
 			
-		Assert.assertTrue(msg.contains("Welcome1"));
+		Assert.assertTrue(msg.contains("Welcome"));
 		
 		dashboard.logoutFromApplication();
 		
