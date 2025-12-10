@@ -10,37 +10,62 @@ import factory.BrowserFactory;
 
 public class BaseClass {
 
-	protected WebDriver driver;
+    protected WebDriver driver;
 
-	
-	@BeforeClass
-	public void setup() 
-	{
-		
-		Reporter.log("**** Running Before Class", true);
-		
-		//System.out.println("**** Running Before Class ");
-		
-		String browserName= ConfigReader.getValue("browser");
-		
-		String url= ConfigReader.getValue("qaURL");
-		
-		driver=BrowserFactory.startBrowser(browserName,url);
-	
-		System.out.println("**** Application is up and running");
+    @BeforeClass
+    public void setup() 
+    {
+        Reporter.log("**** Running Before Class", true);
 
-	}
+        // 1. Browser from Jenkins (fallback -> config.properties)
+        String browserName = System.getProperty("browser");
+        if (browserName == null || browserName.isEmpty()) {
+            browserName = ConfigReader.getValue("browser");   // default
+        }
 
-	@AfterClass
-	public void teardown() 
-	{
-		System.out.println("**** Running After Class ");
-		
-		driver.quit();
-		
-		System.out.println("**** Closing the application ");
+        // 2. Env from Jenkins (dev/qa/stage/prod etc.)
+        String env = System.getProperty("env");
+        if (env == null || env.isEmpty()) {
+            env = "qa";   // default env
+        }
 
+        // 3. Env ke hisaab se URL pick karo from config.properties
+        String urlKey;
+        switch (env.toLowerCase()) {
+            case "dev":
+                urlKey = "devURL";
+                break;
+            case "stage":
+            case "stg":
+                urlKey = "stageURL";
+                break;
+            case "prod":
+                urlKey = "prodURL";
+                break;
+            case "qa":
+            default:
+                urlKey = "qaURL";
+                break;
+        }
 
-	}
+        String url = ConfigReader.getValue(urlKey);
 
+        System.out.println("Running on browser: " + browserName + " | env: " + env + " | url: " + url);
+
+        driver = BrowserFactory.startBrowser(browserName, url);
+
+        System.out.println("**** Application is up and running");
+    }
+
+    @AfterClass
+    public void teardown() 
+    {
+        System.out.println("**** Running After Class ");
+
+        if (driver != null) {
+            driver.quit();
+        }
+
+        System.out.println("**** Closing the application ");
+    }
 }
