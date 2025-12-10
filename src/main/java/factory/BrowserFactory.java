@@ -9,9 +9,12 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.safari.SafariDriver;
+import org.openqa.selenium.safari.SafariOptions;
 
 import dataproviders.ConfigReader;
 
@@ -38,39 +41,62 @@ public class BrowserFactory {
 
             System.out.println("**** Running Test On Selenium Grid ****");
 
-            if (browserName.equalsIgnoreCase("chrome") || browserName.equalsIgnoreCase("gc")
-                    || browserName.equalsIgnoreCase("google")) {
+            try {
+                if (browserName.equalsIgnoreCase("chrome") || browserName.equalsIgnoreCase("gc")
+                        || browserName.equalsIgnoreCase("google")) {
 
-                ChromeOptions opt = new ChromeOptions();
+                    ChromeOptions opt = new ChromeOptions();
 
-                if (isHeadless) {
-                    opt.addArguments("--headless=new");
-                    opt.addArguments("--no-sandbox");
-                    opt.addArguments("--disable-dev-shm-usage");
-                    opt.addArguments("--window-size=1920,1080");
-                    opt.addArguments("--high-dpi-support=1");
-                    opt.addArguments("--force-device-scale-factor=1");
-                }
+                    if (isHeadless) {
+                        opt.addArguments("--headless=new");
+                        opt.addArguments("--no-sandbox");
+                        opt.addArguments("--disable-dev-shm-usage");
+                        opt.addArguments("--window-size=1920,1080");
+                        opt.addArguments("--high-dpi-support=1");
+                        opt.addArguments("--force-device-scale-factor=1");
+                    }
 
-                try {
                     driver = new RemoteWebDriver(new URL(huburl), opt);
-
-                } catch (MalformedURLException e) {
-                    System.out.println("Could not connect to Grid");
                 }
+                else if (browserName.equalsIgnoreCase("firefox") || browserName.equalsIgnoreCase("mozila")
+                        || browserName.equalsIgnoreCase("ff")) {
 
-            } else if (browserName.equalsIgnoreCase("firefox") || browserName.equalsIgnoreCase("mozila")
-                    || browserName.equalsIgnoreCase("ff")) {
+                    FirefoxOptions ffOpt = new FirefoxOptions();
 
-                driver = new FirefoxDriver();
+                    if (isHeadless) {
+                        ffOpt.addArguments("-headless");
+                    }
 
-            } else if (browserName.equalsIgnoreCase("edge") || browserName.equalsIgnoreCase("msedge")
-                    || browserName.equalsIgnoreCase("microsoft edge")) {
+                    driver = new RemoteWebDriver(new URL(huburl), ffOpt);
+                }
+                else if (browserName.equalsIgnoreCase("edge") || browserName.equalsIgnoreCase("msedge")
+                        || browserName.equalsIgnoreCase("microsoft edge")) {
 
-                driver = new EdgeDriver();
+                    EdgeOptions edgeOpt = new EdgeOptions();
 
-            } else {
-                System.out.println("Sorry - currently our framework does not support " + browserName + " browser");
+                    if (isHeadless) {
+                        edgeOpt.addArguments("--headless=new");
+                        edgeOpt.addArguments("--no-sandbox");
+                        edgeOpt.addArguments("--disable-dev-shm-usage");
+                        edgeOpt.addArguments("--window-size=1920,1080");
+                        edgeOpt.addArguments("--high-dpi-support=1");
+                        edgeOpt.addArguments("--force-device-scale-factor=1");
+                    }
+
+                    driver = new RemoteWebDriver(new URL(huburl), edgeOpt);
+                }
+                else if (browserName.equalsIgnoreCase("safari") || browserName.equalsIgnoreCase("apple safari")) {
+
+                    SafariOptions saOpt = new SafariOptions();
+                    // Safari headless officially supported nahi, so normal mode
+                    driver = new RemoteWebDriver(new URL(huburl), saOpt);
+                }
+                else {
+                    System.out.println("Sorry - currently our framework does not support " + browserName + " browser");
+                }
+            }
+            catch (MalformedURLException e) {
+                System.out.println("Could not connect to Grid: " + e.getMessage());
             }
 
         } else {
@@ -97,12 +123,29 @@ public class BrowserFactory {
             } else if (browserName.equalsIgnoreCase("firefox") || browserName.equalsIgnoreCase("mozila")
                     || browserName.equalsIgnoreCase("ff")) {
 
-                driver = new FirefoxDriver();
+                if (isHeadless) {
+                    FirefoxOptions ffOpt = new FirefoxOptions();
+                    ffOpt.addArguments("-headless");
+                    driver = new FirefoxDriver(ffOpt);
+                } else {
+                    driver = new FirefoxDriver();
+                }
 
             } else if (browserName.equalsIgnoreCase("edge") || browserName.equalsIgnoreCase("msedge")
                     || browserName.equalsIgnoreCase("microsoft edge")) {
 
-                driver = new EdgeDriver();
+                if (isHeadless) {
+                    EdgeOptions edgeOpt = new EdgeOptions();
+                    edgeOpt.addArguments("--headless=new");
+                    edgeOpt.addArguments("--no-sandbox");
+                    edgeOpt.addArguments("--disable-dev-shm-usage");
+                    edgeOpt.addArguments("--window-size=1920,1080");
+                    edgeOpt.addArguments("--high-dpi-support=1");
+                    edgeOpt.addArguments("--force-device-scale-factor=1");
+                    driver = new EdgeDriver(edgeOpt);
+                } else {
+                    driver = new EdgeDriver();
+                }
 
             } else if (browserName.equalsIgnoreCase("safari") || browserName.equalsIgnoreCase("apple safari")) {
 
@@ -113,7 +156,11 @@ public class BrowserFactory {
             }
         }
 
-        // 👇 IMPORTANT PART
+        // 👇 Window handling
+        if (driver == null) {
+            throw new RuntimeException("WebDriver is null. Please check browser name / grid config.");
+        }
+
         if (isHeadless) {
             // maximize() headless me kaam nahi karta, isliye size hard-set karo
             driver.manage().window().setSize(new Dimension(1920, 1080));
